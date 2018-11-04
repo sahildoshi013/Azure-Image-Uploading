@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>MrSJD's Example</title>
+	<style>
+		img{
+			width:500px;
+			margin:50px;
+		}
+	</style>
+</head>
+    <body>
+		<input type="text" id="keywords" placeholder="Enter keywords , separated"/><br>
+        <input type="file" id="fileinput" /><br>
+        
+		<button id="upload-button">Upload</button>
+
+        <button id="list-button">List</button>
+		<table id="list-image">
+			<tr>
+				<th>Photos</th>
+				<th>Keywords</th>
+			</tr>
+		</table>
+    </body>
+    <script src="scripts/azure-storage.blob.min.js" charset="utf-8"></script>
+    <script>
+        // Blob-related code goes here
+		// https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-javascript-client-libraries
+		
+		const account = {
+			name: "mrsjd",
+			sas:  "?sv=2017-11-09&ss=bfqt&srt=sco&sp=rwdlacup&se=2019-01-05T17:18:20Z&st=2018-11-04T09:18:20Z&sip=106.0.0.0-107.0.0.0&spr=https&sig=ZXnZB9E7c7rLz%2BMSdGHg%2BYuCt7EhB%2FpZrjnmEf2AmjI%3D"
+		};
+
+		const blobUri = 'https://' + account.name + '.blob.core.windows.net';
+		const blobService = AzureStorage.Blob.createBlobServiceWithSas(blobUri, account.sas);
+		const container = 'mycontainer';
+		
+		
+		document.getElementById('upload-button').addEventListener('click', () => {
+
+		const file = document.getElementById('fileinput').files[0];
+		
+		blobService.createBlockBlobFromBrowserFile('mycontainer', 
+													file.name, 
+													file, 
+													(error, result) => {
+														if(error) {
+															// Handle blob error
+														} else {
+															console.log(result);
+															alert('Upload is successful');
+														}
+													});
+
+		});
+		
+		document.getElementById('list-button').addEventListener('click', () => {
+
+		blobService.listBlobsSegmented('mycontainer', null, (error, results) => {
+				if (error) {
+					// Handle list blobs error
+				} else {
+					results.entries.forEach(blob => {
+						console.log(blob);
+						displayBlob(blob);
+					});
+				}
+			});
+
+		});
+		
+		function displayBlob(blob){
+			var table = document.getElementById("list-image");
+			var row = table.insertRow(1);
+			var cell1 = row.insertCell(0);
+			var cell2 = row.insertCell(1);
+			cell1.innerHTML = '<img src="' + blobUri + '/' + container + '/' + blob.name + account.sas + '" />';
+			cell2.innerHTML = blob.name;
+		}
+    </script>
+</html>
